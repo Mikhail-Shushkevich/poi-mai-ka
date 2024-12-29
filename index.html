@@ -75,6 +75,17 @@
     <audio id="background-music" src="hillbilly-hullabaloo-20240601-044835.mp3" loop autoplay></audio>
 
     <script>
+        // Добавим фоновую музыку
+const backgroundMusic = document.getElementById("background-music");
+
+$("#click-text").click(function() {
+    // Запускаем фоновую музыку при первом клике, если она еще не играла
+    if (backgroundMusic.paused) {
+        backgroundMusic.play();
+    }
+
+    // Ваш код для обработки кликов...
+});
         let leftOffset = 0; // Смещение по горизонтали
         let topOffset = 0;  // Смещение по вертикали
         let direction = "right"; // Текущее направление движения
