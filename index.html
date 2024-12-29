@@ -72,20 +72,9 @@
     <div id="info">Клики: 0 | Уровень: 1</div> <!-- Здесь будет отображаться количество кликов и уровень -->
     <audio id="click-sound" src="zvuk-oi-35-mult.mp3"></audio> <!-- Звук кнопки -->
     <!-- Добавляем фоновую музыку -->
-    <audio id="background-music" src="hillbilly-hullabaloo-20240601-044835.mp3" loop autoplay></audio>
+    <audio id="background-music" src="hillbilly-hullabaloo-20240601-044835.mp3" loop></audio>
 
     <script>
-        // Добавим фоновую музыку
-const backgroundMusic = document.getElementById("background-music");
-
-$("#click-text").click(function() {
-    // Запускаем фоновую музыку при первом клике, если она еще не играла
-    if (backgroundMusic.paused) {
-        backgroundMusic.play();
-    }
-
-    // Ваш код для обработки кликов...
-});
         let leftOffset = 0; // Смещение по горизонтали
         let topOffset = 0;  // Смещение по вертикали
         let direction = "right"; // Текущее направление движения
@@ -95,6 +84,7 @@ $("#click-text").click(function() {
         let level = 1; // Уровень сложности
         const clicksPerLevel = 20; // Количество кликов для каждого уровня
         const clickSound = document.getElementById("click-sound");
+        const backgroundMusic = document.getElementById("background-music");
 
         // Функция для анимации салюта
         function createFirework(x, y) {
@@ -144,6 +134,11 @@ $("#click-text").click(function() {
 
         // Обработчик клика по тексту
         $("#click-text").click(function() {
+            // Запускаем фоновую музыку при первом клике, если она еще не играла
+            if (backgroundMusic.paused) {
+                backgroundMusic.play();
+            }
+
             clickCount++; // Увеличиваем счетчик кликов
 
             // Если звук не завершен, ждем его окончания
