@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Двигающаяся Рожица</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #f06, #4c6ef5); /* Интересный фон */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            flex-direction: column;
+            text-align: center; /* Центрирование текста */
+        }
+
+        #click-text {
+            position: absolute;
+            cursor: pointer;
+            font-size: 18px; /* Уменьшили размер текста */
+            font-weight: bold;
+            color: white;
+            padding: 10px 20px; /* Уменьшили отступы */
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            transition: transform 0.2s ease; /* Плавное изменение положения */
+        }
+
+        #info {
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            margin-top: 20px;
+            position: absolute;
+            top: 10px; /* Расстояние от верхней части */
+            z-index: 9999; /* Чтобы информация была на переднем плане */
+        }
+
+        .firework {
+            position: absolute;
+            border-radius: 50%;
+            background-color: #ff0;
+            opacity: 1;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        @keyframes fireworkAnimation {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(3);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="click-text">Кликни</div> <!-- Надпись вместо рожицы -->
+    <div id="info">Клики: 0 | Уровень: 1</div> <!-- Здесь будет отображаться количество кликов и уровень -->
+    <audio id="click-sound" src="zvuk-oi-35-mult.mp3"></audio> <!-- Звук кнопки -->
+    <!-- Добавляем фоновую музыку -->
+    <audio id="background-music" src="hillbilly-hullabaloo-20240601-044835.mp3" loop autoplay></audio>
+
+    <script>
+        let leftOffset = 0; // Смещение по горизонтали
+        let topOffset = 0;  // Смещение по вертикали
+        let direction = "right"; // Текущее направление движения
+        let intervalId; // Переменная для хранения ID интервала
+        let isMoving = false; // Флаг для отслеживания состояния анимации
+        let clickCount = 0; // Счетчик кликов
+        let level = 1; // Уровень сложности
+        const clicksPerLevel = 20; // Количество кликов для каждого уровня
+        const clickSound = document.getElementById("click-sound");
+
+        // Функция для анимации салюта
+        function createFirework(x, y) {
+            const firework = $("<div class='firework'></div>").appendTo("body");
+            const size = Math.random() * 30 + 20; // Размер фейерверка
+            firework.css({
+                left: x - size / 2,
+                top: y - size / 2,
+                width: size + "px",
+                height: size + "px",
+                animation: "fireworkAnimation 1s ease-out forwards"
+            });
+
+            // Удаляем элемент после завершения анимации
+            setTimeout(() => firework.remove(), 1000);
+        }
+
+        // Функция для обновления позиции
+        let moveText = function () {
+            const speed = 2 + clickCount * 0.1; // Начальная скорость 2, увеличение на 0.1 с каждым кликом
+
+            if (direction === "right") {
+                leftOffset += speed; // Движение вправо
+                if (leftOffset >= 350) {
+                    direction = "down"; // Смена направления на "вниз"
+                }
+            } else if (direction === "down") {
+                topOffset += speed; // Движение вниз
+                if (topOffset >= 350) {
+                    direction = "left"; // Смена направления на "влево"
+                }
+            } else if (direction === "left") {
+                leftOffset -= speed; // Движение влево
+                if (leftOffset <= 0) {
+                    direction = "up"; // Смена направления на "вверх"
+                }
+            } else if (direction === "up") {
+                topOffset -= speed; // Движение вверх
+                if (topOffset <= 0) {
+                    direction = "right"; // Смена направления на "вправо"
+                }
+            }
+
+            // Обновляем позицию текста
+            $("#click-text").offset({ left: leftOffset + (window.innerWidth - 300) / 2, top: topOffset + (window.innerHeight - 300) / 2 });
+        };
+
+        // Обработчик клика по тексту
+        $("#click-text").click(function() {
+            clickCount++; // Увеличиваем счетчик кликов
+
+            // Если звук не завершен, ждем его окончания
+            if (clickSound.paused || clickSound.ended) {
+                clickSound.play(); // Воспроизводим звук при клике
+            } else {
+                // Если звук еще играет, ждем его окончания
+                clickSound.onended = () => clickSound.play();
+            }
+
+            // Увеличиваем скорость анимации, уменьшая интервал
+            let newInterval = Math.max(50 - (clickCount * 5), 10); // Минимальный интервал 20 для первого уровня
+
+            // Если анимация уже запущена, сбрасываем текущий интервал и запускаем новый
+            if (isMoving) {
+                clearInterval(intervalId);
+                intervalId = setInterval(moveText, newInterval);
+            } else {
+                // Если анимация не запущена, то запускаем ее
+                intervalId = setInterval(moveText, newInterval);
+                isMoving = true;
+            }
+
+            // Обновляем текст с количеством кликов и уровнем
+            $("#info").text("Клики: " + clickCount + " | Уровень: " + level);
+
+            // Если количество кликов достигает 20, увеличиваем скорость анимации
+            if (clickCount >= level * clicksPerLevel) {
+                level++; // Переход на следующий уровень
+                $("#info").text("Клики: " + clickCount + " | Уровень: " + level);
+            }
+
+            // Если достигнут третий уровень и 60 кликов, останавливаем игру
+            if (clickCount >= 60) {
+                clearInterval(intervalId); // Останавливаем анимацию
+                $("#info").text("Вы победили!"); // Меняем текст
+
+                // Запускаем анимацию салюта
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => createFirework(Math.random() * $(window).width(), Math.random() * $(window).height()), i * 100);
+                }
+                // Останавливаем обработку кликов
+                $(document).off("click");
+            }
+        });
+
+        // Изначально запускаем анимацию с начальным интервалом
+        intervalId = setInterval(moveText, 100);
+    </script>
+</body>
+</html>
